@@ -12,6 +12,8 @@ mod config;
 mod console;
 mod ui;
 
+use ui::{task_message, warning};
+
 /// This represents the minimum (Major, Minor) version raverdude requires avrdude to meet.
 const MIN_VERSION_AVRDUDE: (u8, u8) = (6, 3);
 
@@ -134,7 +136,7 @@ fn ravedude() -> anyhow::Result<()> {
         (Some(_), Some(board_name)) => {
             anyhow::bail!("can't pass board as command-line argument when Ravedude.toml is present; set `board = {:?}` under [general] in Ravedude.toml", board_name);
         }
-        (Some(path), None) => board::get_board_from_manifest(path)?,
+        (Some(path), None) => config::get_config_from_manifest(path)?,
         (None, Some(board_name)) => {
             warning!(
                 "Passing the board as command-line argument is deprecated; create a Ravedude.toml in the project root instead:"
@@ -144,7 +146,7 @@ fn ravedude() -> anyhow::Result<()> {
                 toml::to_string(&config::RavedudeConfig::from_args(&args)?)?
             );
 
-            board::get_board_from_name(&board_name)?
+            config::get_config_from_board_name(&board_name)?
         }
         (None, None) => {
             anyhow::bail!("couldn't find Ravedude.toml in project");

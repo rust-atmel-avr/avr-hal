@@ -1,5 +1,6 @@
-use serde::{Deserialize, Serialize};
 use std::num::NonZeroU32;
+use std::path::Path;
+pub use crate::board::{config::{BoardConfig, ResetOptions}, get_board_from_name};
 
 #[derive(serde::Serialize, serde::Deserialize, Debug, Default)]
 #[serde(rename_all = "kebab-case")]
@@ -9,28 +10,6 @@ pub struct RavedudeConfig {
 
     #[serde(rename = "board")]
     pub board_config: Option<BoardConfig>,
-}
-
-fn serialize_baudrate<S>(val: &Option<Option<NonZeroU32>>, serializer: S) -> Result<S::Ok, S::Error>
-where
-    S: serde::Serializer,
-{
-    let baudrate = val.as_ref().map(|val| val.map_or(-1, |x| x.get() as i32));
-
-    baudrate.serialize(serializer)
-}
-
-fn deserialize_baudrate<'de, D>(deserializer: D) -> Result<Option<Option<NonZeroU32>>, D::Error>
-where
-    D: serde::Deserializer<'de>,
-{
-    Ok(match Option::<i32>::deserialize(deserializer)? {
-        None => None,
-        Some(-1) => Some(None),
-        Some(baudrate) => Some(Some(NonZeroU32::new(baudrate as _).ok_or_else(|| {
-            serde::de::Error::custom(format!("invalid baudrate: {baudrate}"))
-        })?)),
-    })
 }
 
 impl RavedudeConfig {
@@ -87,97 +66,36 @@ impl RavedudeGeneralConfig {
     }
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug, Default)]
-#[serde(rename_all = "kebab-case")]
-pub struct BoardConfig {
-    pub name: Option<String>,
-    pub inherit: Option<String>,
-    pub reset: Option<ResetOptions>,
-    pub avrdude: Option<BoardAvrdudeOptions>,
-    pub usb_info: Option<BoardUSBInfo>,
+pub fn get_config_from_board_name(board_name: &str) -> anyhow::Result<RavedudeConfig> {
+    Ok(RavedudeConfig {
+        board_config: Some(get_board_from_name(board_name)?),
+        ..Default::default()
+    })
 }
 
-impl BoardConfig {
-    pub fn merge(self, base: BoardConfig) -> Self {
-        Self {
-            name: self.name.or(base.name),
-            // inherit is used to decide what BoardConfig to inherit and isn't used anywhere else
-            inherit: None,
-            reset: self.reset.or(base.reset),
-            avrdude: match self.avrdude {
-                Some(avrdude) => base.avrdude.map(|base_avrdude| avrdude.merge(base_avrdude)),
-                None => base.avrdude,
-            },
-            usb_info: self.usb_info.or(base.usb_info),
-        }
-    }
-}
+pub fn get_config_from_manifest(manifest_path: &Path) -> anyhow::Result<RavedudeConfig> {
+    Ok({
+        let file_contents = std::fs::read_to_string(manifest_path)
+            .map_err(|err| anyhow::anyhow!("Ravedude.toml read error:\n{}", err))?;
 
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct ResetOptions {
-    pub automatic: bool,
-}
+        let mut board: RavedudeConfig = toml::from_str(&file_contents)
+            .map_err(|err| anyhow::anyhow!("invalid Ravedude.toml:\n{}", err))?;
 
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
-#[serde(rename_all = "kebab-case")]
-pub struct BoardAvrdudeOptions {
-    pub programmer: Option<String>,
-    pub partno: Option<String>,
-    #[serde(
-        serialize_with = "serialize_baudrate",
-        deserialize_with = "deserialize_baudrate"
-    )]
-    // Inner option to represent whether the baudrate exists, outer option to allow for overriding.
-    // Option<if baudrate == -1 { None } else { NonZeroU32(baudrate) }>
-    pub baudrate: Option<Option<NonZeroU32>>,
-    pub do_chip_erase: Option<bool>,
-}
-impl BoardAvrdudeOptions {
-    pub fn merge(self, base: Self) -> Self {
-        Self {
-            programmer: self.programmer.or(base.programmer),
-            partno: self.partno.or(base.partno),
-            baudrate: self.baudrate.or(base.baudrate),
-            do_chip_erase: self.do_chip_erase.or(base.do_chip_erase),
-        }
-    }
-}
-
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
-#[serde(rename_all = "kebab-case")]
-pub enum BoardUSBInfo {
-    PortIds(Vec<BoardPortID>),
-    #[serde(rename = "error")]
-    Error(String),
-}
-
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
-pub struct BoardPortID {
-    pub vid: u16,
-    pub pid: u16,
-}
-
-impl BoardConfig {
-    pub fn guess_port(&self) -> Option<anyhow::Result<std::path::PathBuf>> {
-        match &self.usb_info {
-            Some(BoardUSBInfo::Error(err)) => Some(Err(anyhow::anyhow!(err.clone()))),
-            Some(BoardUSBInfo::PortIds(ports)) => {
-                for serialport::SerialPortInfo {
-                    port_name,
-                    port_type,
-                } in serialport::available_ports().unwrap()
-                {
-                    if let serialport::SerialPortType::UsbPort(usb_info) = port_type {
-                        for &BoardPortID { vid, pid } in ports {
-                            if usb_info.vid == vid && usb_info.pid == pid {
-                                return Some(Ok(port_name.into()));
-                            }
-                        }
-                    }
-                }
-                Some(Err(anyhow::anyhow!("Serial port not found.")))
+        if let Some(board_config) = board.board_config.as_ref() {
+            if let Some(board_name) = board.general_options.board.as_deref() {
+                anyhow::bail!(
+                    "can't both have board in [general] and [board] section; set inherit = \"{}\" under [board] to inherit its options",
+                    board_name
+                )
             }
-            None => None,
+            if let Some(inherit) = board_config.inherit.as_deref() {
+                let base_board = get_config_from_board_name(inherit)?.board_config.unwrap();
+                board.board_config = Some(board.board_config.take().unwrap().merge(base_board));
+            }
+        } else if let Some(board_name) = board.general_options.board.as_deref() {
+            let base_board = get_config_from_board_name(board_name)?.board_config.unwrap();
+            board.board_config = Some(base_board);
         }
-    }
+        board
+    })
 }
