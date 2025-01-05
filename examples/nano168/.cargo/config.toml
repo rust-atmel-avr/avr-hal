@@ -2,7 +2,7 @@
 target = "../../avr-specs/avr-atmega168.json"
 
 [target.'cfg(target_arch = "avr")']
-runner = "ravedude nano168 -cb 57600"
+runner = "cargo avr run board nano168 --baudrate 57600"
 
 [unstable]
 build-std = ["core"]

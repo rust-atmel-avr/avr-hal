@@ -2,7 +2,7 @@
 target = "../../avr-specs/avr-attiny85.json"
 
 [target.'cfg(target_arch = "avr")']
-runner = "ravedude trinket"
+runner = "cargo avr flash board trinket"
 
 [unstable]
 build-std = ["core"]

@@ -2,7 +2,7 @@
 target = "../../avr-specs/avr-atmega32u4.json"
 
 [target.'cfg(target_arch = "avr")']
-runner = "ravedude leonardo"
+runner = "cargo avr flash board leonardo"
 
 [unstable]
 build-std = ["core"]
