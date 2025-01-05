@@ -49,6 +49,46 @@ impl ProgrammerOptions {
     }
 }
 
+#[derive(clap::Parser, clap::ValueEnum, Clone, Default)]
+#[derive(Debug)]
+pub enum AttachProtocol {
+    #[default]
+    /// Do not attach to the device
+    None,
+
+    /// A plain serial connection
+    Serial,
+}
+
+#[derive(clap::Parser)]
+#[derive(Debug)]
+#[derive(Merge)]
+/// Options for attaching to a device
+pub struct AttachOptions {
+    /// The protocol used to attach to the device
+    #[arg(long, env="CARGO_AVR_ATTACH_PROTOCOL")]
+    #[merge(skip)]
+    pub protocol: AttachProtocol,
+
+    /// Serial options
+    #[clap(flatten)]
+    pub serial_opts: SerialAttachOptions,
+}
+
+#[derive(clap::Parser)]
+#[derive(Debug)]
+#[derive(Merge)]
+/// Options for attaching to a device with a serial console
+pub struct SerialAttachOptions {
+    /// Console port
+    #[arg(long, env = "CARGO_AVR_SERIAL_PORT")]
+    pub port: Option<PathBuf>,
+
+    /// Console baud rate
+    #[arg(long, env = "CARGO_AVR_SERIAL_BAUDRATE")]
+    pub baudrate: Option<NonZeroU32>,
+}
+
 #[derive(clap::Parser)]
 #[derive(Debug)]
 pub struct BoardOptions {
