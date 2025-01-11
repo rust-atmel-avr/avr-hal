@@ -4,6 +4,7 @@ use tracing_subscriber::FmtSubscriber;
 
 mod flash;
 mod attach;
+mod run;
 mod util;
 
 // Subcommands of `cargo avr`
@@ -11,6 +12,7 @@ mod util;
 enum Subcommand {
     Flash(flash::Command),
     Attach(attach::Command),
+    Run(run::Command),
 }
 
 #[derive(clap::Parser, Debug)]
@@ -24,6 +26,7 @@ impl AvrCommand {
         match self.subcommand {
             Subcommand::Flash(cmd) => cmd.run(),
             Subcommand::Attach(cmd) => cmd.run(),
+            Subcommand::Run(cmd) => cmd.run(),
         }
     }
 }
