@@ -2,7 +2,7 @@
 target = "../../avr-specs/avr-atmega328p.json"
 
 [target.'cfg(target_arch = "avr")']
-runner = "ravedude trinket-pro"
+runner = "cargo avr flash board trinket-pro"
 
 [unstable]
 build-std = ["core"]

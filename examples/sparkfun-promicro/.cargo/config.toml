@@ -2,7 +2,7 @@
 target = "../../avr-specs/avr-atmega32u4.json"
 
 [target.'cfg(target_arch = "avr")']
-runner = "ravedude promicro"
+runner = "cargo avr flash board promicro"
 
 [unstable]
 build-std = ["core"]

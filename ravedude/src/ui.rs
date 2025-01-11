@@ -1,5 +1,4 @@
 /// Emit a message in the cargo style with a green "verb" up front and some text afterwards.
-#[macro_export]
 macro_rules! task_message {
     ($verb:expr, $($fmt:tt)+) => {
         eprint!("{:>12} ", colored::Colorize::bold(colored::Colorize::green($verb)));
@@ -7,7 +6,9 @@ macro_rules! task_message {
     };
 }
 
-#[macro_export]
+pub(crate) use task_message;
+
+#[allow(unused)]
 macro_rules! warning {
     ($($fmt:tt)+) => {
         eprint!("{}", colored::Colorize::bold(colored::Colorize::yellow("Warning")));
@@ -16,6 +17,11 @@ macro_rules! warning {
     };
 }
 
+#[allow(unused)]
+pub(crate) use warning;
+
+
+#[allow(unused)]
 pub fn print_error(e: anyhow::Error) {
     use colored::Colorize as _;
 

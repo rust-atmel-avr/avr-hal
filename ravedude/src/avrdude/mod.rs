@@ -4,7 +4,9 @@ use std::process;
 
 use std::io::Write;
 
-use crate::config::BoardAvrdudeOptions;
+pub mod config;
+
+use config::BoardAvrdudeOptions;
 
 #[derive(Debug)]
 pub struct Avrdude {
@@ -110,7 +112,7 @@ impl Avrdude {
         command = command.arg("-D").arg("-U").arg(flash_instruction);
 
         if debug {
-            crate::task_message!(
+            crate::ui::task_message!(
                 "Dbg.Command",
                 "{} {}",
                 command.get_program().to_string_lossy(),
