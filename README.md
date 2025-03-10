@@ -1,4 +1,6 @@
-avr-hal ![Continuous Integration](https://github.com/Rahix/avr-hal/workflows/Continuous%20Integration/badge.svg) [![arduino-hal docs](https://img.shields.io/badge/docs-arduino--hal-4d76ae)][arduino-hal docs] [![atmega-hal docs](https://img.shields.io/badge/docs-atmega--hal-4d76ae)][atmega-hal docs] [![attiny-hal docs](https://img.shields.io/badge/docs-attiny--hal-4d76ae)][attiny-hal docs]
+This project is a fork of [avr-hal by Rahix](https://github.com/Rahix/avr-hal). See [fork readme](./README-fork.md) for rationale and details.
+
+avr-hal ![Continuous Integration](https://github.com/rust-atmel-avr/avr-hal/workflows/Continuous%20Integration/badge.svg) [![arduino-hal docs](https://img.shields.io/badge/docs-arduino--hal-4d76ae)][arduino-hal docs] [![atmega-hal docs](https://img.shields.io/badge/docs-atmega--hal-4d76ae)][atmega-hal docs] [![attiny-hal docs](https://img.shields.io/badge/docs-attiny--hal-4d76ae)][attiny-hal docs]
 =======
 Hardware Abstraction Layer for AVR microcontrollers and common boards (for example Arduino).  Based on the [`avr-device`](https://github.com/Rahix/avr-device) crate.
 
@@ -79,10 +81,10 @@ The `avr-specs/` directory contains rustc target definitions for all supported m
 ### [`ravedude`](./ravedude) [![crates.io page](https://img.shields.io/crates/v/ravedude.svg)](https://crates.io/crates/ravedude)
 `ravedude` is a utility for seamlessly integrating avrdude and a serial console into the cargo workflow.  With a bit of configuration (check its [README](./ravedude/README.md)!) you can then upload your code to your board and view its output over the serial console by just using `cargo run` as you would normally.
 
-[avr-hal-generic docs]: https://rahix.github.io/avr-hal/avr_hal_generic/index.html
-[arduino-hal docs]: https://rahix.github.io/avr-hal/arduino_hal/index.html
-[atmega-hal docs]: https://rahix.github.io/avr-hal/atmega_hal/index.html
-[attiny-hal docs]: https://rahix.github.io/avr-hal/attiny_hal/index.html
+[avr-hal-generic docs]: https://rust-atmel-avr.github.io/avr-hal/avr_hal_generic/index.html
+[arduino-hal docs]: https://rust-atmel-avr.github.io/avr-hal/arduino_hal/index.html
+[atmega-hal docs]: https://rust-atmel-avr.github.io/avr-hal/atmega_hal/index.html
+[attiny-hal docs]: https://rust-atmel-avr.github.io/avr-hal/attiny_hal/index.html
 
 ## Disclaimer
 This project is not affiliated with either Microchip (former Atmel) nor any of the Vendors that created the boards supported in this repository.
